@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useThemePreference, useDyslexiaPreference } from "@/hooks/useThemePreference";
@@ -38,9 +38,17 @@ const Navbar = () => {
     { label: "Midnight sand", value: "midnight" },
   ];
 
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   return (
     <nav className="sticky top-0 z-50 border-b border-[color:var(--color-border)]/80 bg-[color:var(--color-bg)]/90 backdrop-blur supports-[backdrop-filter]:bg-[color:var(--color-bg)]/75">
-      <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-4 px-6 md:px-8">
+      <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 md:px-8">
         <Link to="/" className="flex items-center gap-3 focus-ring">
           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--color-primary)] text-base font-semibold uppercase tracking-[0.14em] text-white shadow-[var(--shadow-card)]">
             N
@@ -112,8 +120,10 @@ const Navbar = () => {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent bg-[color:var(--color-card)] shadow-sm text-[color:var(--color-ink)] focus-ring md:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-full border border-transparent bg-[color:var(--color-card)] shadow-sm text-[color:var(--color-ink)] transition-colors duration-150 focus-ring md:hidden"
           aria-label="Toggle menu"
+          aria-expanded={isOpen}
+          aria-controls="mobile-navigation"
         >
           {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -121,7 +131,10 @@ const Navbar = () => {
 
       {/* Mobile Navigation */}
       {isOpen && (
-        <div className="md:hidden border-t border-[color:var(--color-border)]/80 bg-[color:var(--color-bg)]/95 px-6 py-6 shadow-[var(--shadow-card)]">
+        <div
+          id="mobile-navigation"
+          className="md:hidden border-t border-[color:var(--color-border)]/80 bg-[color:var(--color-bg)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 shadow-[var(--shadow-card)]"
+        >
           <div className="space-y-6">
             {navLinks.map((link) => (
               <Link
@@ -157,29 +170,31 @@ const Navbar = () => {
                 <Switch checked={dyslexiaEnabled} onCheckedChange={setDyslexiaEnabled} aria-label="Toggle dyslexia-friendly font" />
               </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="lg"
-              className="w-full rounded-full bg-[#FFE55A] font-semibold text-[#1F1F1F] hover:bg-[#FFE55A]/90"
-              onClick={() => {
-                setIsOpen(false);
-                handleSignIn();
-              }}
-            >
-              Sign In
-            </Button>
-            <Button
-              type="button"
-              size="lg"
-              className="w-full rounded-full"
-              onClick={() => {
-                setIsOpen(false);
-                handleStartAssessment();
-              }}
-            >
-              Start Assessment
-            </Button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="lg"
+                className="w-full rounded-full bg-[#FFE55A] font-semibold text-[#1F1F1F] shadow-sm hover:bg-[#FFE55A]/90"
+                onClick={() => {
+                  setIsOpen(false);
+                  handleSignIn();
+                }}
+              >
+                Sign In
+              </Button>
+              <Button
+                type="button"
+                size="lg"
+                className="w-full rounded-full shadow-sm"
+                onClick={() => {
+                  setIsOpen(false);
+                  handleStartAssessment();
+                }}
+              >
+                Start Assessment
+              </Button>
+            </div>
           </div>
         </div>
       )}

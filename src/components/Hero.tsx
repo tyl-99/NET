@@ -28,16 +28,16 @@ const Hero = () => {
   return (
     <section className="relative isolate overflow-hidden">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(25,154,142,0.22),_transparent_55%),radial-gradient(circle_at_bottom_right,_rgba(59,76,202,0.18),_transparent_60%)]" />
-      <div className="relative mx-auto flex max-w-7xl flex-col gap-16 px-6 py-24 md:px-8 lg:flex-row lg:items-center lg:py-28">
+      <div className="relative mx-auto flex max-w-7xl flex-col gap-14 px-4 py-20 sm:px-6 sm:py-24 md:px-8 lg:flex-row lg:items-center lg:gap-20 lg:py-28">
         <div className="max-w-2xl space-y-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-card)]/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground shadow-[var(--shadow-card)]">
+          <div className="inline-flex items-center gap-2 self-start rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-card)]/80 px-4 py-2 text-[0.68rem] font-semibold uppercase tracking-[0.28em] text-muted-foreground shadow-[var(--shadow-card)]">
             Calm, modern pre-screen
           </div>
           <div className="space-y-6 text-balance">
-            <h1 className="text-4xl font-semibold text-[color:var(--color-ink)] md:text-5xl">
+            <h1 className="text-3xl font-semibold text-[color:var(--color-ink)] sm:text-4xl md:text-5xl">
               Quick, caring pre-screening—no diagnosis, just clarity.
             </h1>
-            <p className="text-lg leading-relaxed text-muted-foreground">
+            <p className="text-base leading-relaxed text-muted-foreground sm:text-lg">
               N.E.T. guides parents, educators, adults, and clinicians through a supportive conversation that surfaces patterns,
               accommodations, and next steps—all with privacy control in your hands.
             </p>
@@ -82,7 +82,7 @@ const Hero = () => {
           </div>
         </div>
 
-        <aside className="relative w-full max-w-md rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-card)]/90 p-8 shadow-[var(--shadow-card)] backdrop-blur">
+        <aside className="relative w-full max-w-md rounded-[24px] border border-[color:var(--color-border)] bg-[color:var(--color-card)]/90 p-6 shadow-[var(--shadow-card)] backdrop-blur sm:p-8">
           <div className="absolute inset-x-6 -top-3 h-6 rounded-full bg-[var(--color-primary)]/20 blur-2xl" aria-hidden="true" />
           <div className="space-y-6">
             <header className="space-y-2">

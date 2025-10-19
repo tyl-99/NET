@@ -32,28 +32,31 @@ const steps = [
 
 const HowItWorks = () => {
   return (
-    <section className="py-24">
-      <div className="mx-auto max-w-7xl px-6 md:px-8">
-        <div className="mx-auto mb-14 max-w-3xl text-center text-balance">
+    <section className="py-20 sm:py-24">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 md:px-8">
+        <div className="mx-auto mb-12 max-w-3xl text-center text-balance">
           <h2 className="text-3xl font-semibold text-[color:var(--color-ink)] md:text-4xl">How N.E.T. feels in practice</h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
+          <p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
             Designed for cognitive ease: calm pacing, predictable steps, and friendly microcopy that keeps everyone oriented.
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
+        <ul
+          className="-mx-1.5 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 pl-1.5 pr-[env(safe-area-inset-right)] md:mx-0 md:grid md:snap-none md:overflow-visible md:px-0 md:pb-0 md:grid-cols-3"
+          role="list"
+          aria-label="Overview of the assessment experience"
+        >
           {steps.map((step) => (
-            <article
-              key={step.title}
-              className="flex flex-col gap-6 rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-card)]/90 p-6 shadow-[var(--shadow-card)] transition-transform duration-200 ease-out hover:-translate-y-1"
-            >
-              {step.illustration}
-              <div className="space-y-3">
-                <h3 className="text-xl font-semibold text-[color:var(--color-ink)]">{step.title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
-              </div>
-            </article>
+            <li key={step.title} className="min-w-[78%] snap-start md:min-w-0">
+              <article className="flex h-full flex-col gap-6 rounded-[16px] border border-[color:var(--color-border)] bg-[color:var(--color-card)]/90 p-6 shadow-[var(--shadow-card)] transition-transform duration-200 ease-out hover:-translate-y-1">
+                {step.illustration}
+                <div className="space-y-3">
+                  <h3 className="text-xl font-semibold text-[color:var(--color-ink)]">{step.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{step.description}</p>
+                </div>
+              </article>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );
