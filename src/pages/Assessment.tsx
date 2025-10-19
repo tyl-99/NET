@@ -1,121 +1,235 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowRight, MessageSquare } from "lucide-react";
-import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Clock, ShieldAlert, Volume2 } from "lucide-react";
+
+interface Message {
+  id: string;
+  sender: "guide" | "user";
+  text: string;
+  timestamp: string;
+}
+
+const prompts = [
+  "Tell us about the learning wins and friction you notice most often.",
+  "When does support seem to help, and what still feels tough?",
+  "Are there any sensory, focus, or emotional cues we should keep in mind?",
+  "Share any accommodations or strategies that already work well.",
+  "What goal would feel like progress after today?",
+];
 
 const Assessment = () => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [responses, setResponses] = useState<string[]>(Array(5).fill(""));
-  const totalSteps = 5;
+  const location = useLocation();
+  const [messages, setMessages] = useState<Message[]>(() => [
+    {
+      id: "prompt-0",
+      sender: "guide",
+      text: prompts[0],
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    },
+  ]);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [readingMode, setReadingMode] = useState(false);
 
-  const questions = [
-    "Tell us about the learning challenges you've observed. What specific situations or tasks seem most difficult?",
-    "How do these challenges affect daily activities, schoolwork, or social interactions?",
-    "Have you noticed any particular strengths or strategies that work well?",
-    "What accommodations or supports have been tried so far, if any?",
-    "What are your main goals or concerns you'd like help addressing?",
-  ];
+  const role = (location.state as { role?: string } | undefined)?.role ?? "guest";
 
-  const handleNext = () => {
-    if (!responses[currentStep - 1].trim()) {
-      toast.error("Please provide a response before continuing");
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const answeredCount = useMemo(() => messages.filter((message) => message.sender === "user").length, [messages]);
+  const progress = Math.min((answeredCount / prompts.length) * 100, 100);
+  const estimatedRemaining = Math.max(0, 15 - answeredCount * 3);
+
+  const addMessage = (message: Message) => {
+    setMessages((prev) => [...prev, message]);
+  };
+
+  const handleSend = () => {
+    const trimmed = input.trim();
+    if (!trimmed) {
       return;
     }
 
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      toast.success("Assessment complete! Generating your report...");
-      setTimeout(() => navigate("/results"), 1500);
+    const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    addMessage({ id: crypto.randomUUID(), sender: "user", text: trimmed, timestamp });
+    setInput("");
+
+    const nextIndex = answeredCount + 1;
+
+    if (nextIndex >= prompts.length) {
+      setIsTyping(false);
+      setIsComplete(true);
+      addMessage({
+        id: "closing",
+        sender: "guide",
+        text: "Thank you. Ready to see the summary?",
+        timestamp,
+      });
+      return;
     }
+
+    setIsTyping(true);
+    setTimeout(() => {
+      setIsTyping(false);
+      addMessage({
+        id: `prompt-${nextIndex}`,
+        sender: "guide",
+        text: prompts[nextIndex],
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      });
+    }, 750);
   };
 
-  const handleResponseChange = (value: string) => {
-    const newResponses = [...responses];
-    newResponses[currentStep - 1] = value;
-    setResponses(newResponses);
-  };
-
-  const progress = (currentStep / totalSteps) * 100;
+  const messageTextClass = readingMode ? "text-base leading-8" : "text-sm leading-relaxed";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      
-      <main className="flex-1 py-16">
-        <div className="container px-4 max-w-3xl mx-auto">
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-foreground">Pre-Screen Assessment</h1>
-              <span className="text-sm text-muted-foreground">
-                Question {currentStep} of {totalSteps}
-              </span>
-            </div>
-            <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground mt-2">
-              ~{Math.max(1, totalSteps - currentStep + 1) * 3} minutes remaining
-            </p>
-          </div>
-
-          <Card className="shadow-medium">
-            <CardContent className="p-8">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <MessageSquare className="h-5 w-5 text-primary" />
+      <main className="flex-1 py-12">
+        <div className="mx-auto grid max-w-7xl gap-8 px-6 md:px-8 lg:grid-cols-[minmax(0,_1fr)_320px]">
+          <section className="flex flex-col rounded-[16px] border border-border bg-card shadow-[var(--shadow-card)]">
+            <header className="flex flex-col gap-4 border-b border-border/80 px-6 py-5 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-muted-foreground">Calm conversational pre-screen</p>
+                <p className="text-lg text-foreground">We’ll guide you one question at a time.</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-full border border-border px-3 py-2 text-sm text-muted-foreground">
+                  <Volume2 className="h-4 w-4" aria-hidden="true" />
+                  Read-aloud ready
                 </div>
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold mb-2 text-card-foreground">
-                    {questions[currentStep - 1]}
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Take your time. Your detailed responses help us provide more accurate insights.
+                <div className="flex items-center gap-2">
+                  <Switch id="reading-mode" checked={readingMode} onCheckedChange={setReadingMode} />
+                  <label htmlFor="reading-mode" className="text-sm text-muted-foreground">
+                    Reading mode
+                  </label>
+                </div>
+              </div>
+            </header>
+
+            <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6" aria-live="polite">
+              {messages.map((message) => (
+                <div key={message.id} className="flex flex-col gap-1">
+                  <div
+                    className={`max-w-[min(100%,_36rem)] rounded-[18px] px-5 py-4 shadow-sm ${
+                      message.sender === "guide"
+                        ? "bg-primary/10 text-foreground"
+                        : "self-end bg-secondary text-secondary-foreground"
+                    } ${messageTextClass}`}
+                  >
+                    {message.text}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {message.sender === "guide" ? "N.E.T. Guide" : "You"} • {message.timestamp}
+                  </span>
+                </div>
+              ))}
+
+              {isTyping && (
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex h-10 w-16 items-center justify-center rounded-full bg-primary/10">
+                    <div className="flex gap-1">
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-primary" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:0.1s]" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:0.2s]" />
+                    </div>
+                  </div>
+                  Thinking…
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-border/80 bg-muted/40 px-6 py-5">
+              {!isComplete ? (
+                <form
+                  className="space-y-4"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    handleSend();
+                  }}
+                >
+                  <label htmlFor="response" className="text-sm font-medium text-muted-foreground">
+                    Your response
+                  </label>
+                  <Textarea
+                    id="response"
+                    value={input}
+                    onChange={(event) => setInput(event.target.value)}
+                    placeholder="Type up to 4–5 sentences. You can pause and resume anytime."
+                    className={`min-h-[140px] resize-none ${readingMode ? "text-base leading-8" : "text-sm"}`}
+                  />
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs text-muted-foreground">Plain language is welcome. Bullet points work too.</p>
+                    <Button type="submit" disabled={isTyping}>
+                      Send and continue
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <div className="flex flex-col gap-4">
+                  <Card className="border-primary/30 bg-primary/5">
+                    <CardContent className="space-y-2 p-4">
+                      <p className="text-sm font-semibold text-primary">Nicely done.</p>
+                      <p className="text-sm text-muted-foreground">
+                        We gathered enough to build your role-ready summary. Review it now or export it later.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Button onClick={() => navigate("/results", { state: { role } })}>
+                    View my calm results
+                  </Button>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <aside className="space-y-4">
+            <Card className="border-border/80">
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-base">Session card</CardTitle>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{role.replace(/-/g, " ")}</p>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium text-foreground">Progress</span>
+                    <span className="text-muted-foreground">{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-2" aria-label="Progress" />
+                </div>
+                <div className="flex items-center gap-3 rounded-[12px] border border-border/80 bg-card px-4 py-3 text-sm">
+                  <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
+                  <div>
+                    <p className="font-medium text-foreground">About {estimatedRemaining} minutes left</p>
+                    <p className="text-xs text-muted-foreground">Average pace—go slower if you need.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-[12px] border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+                  <ShieldAlert className="h-4 w-4 text-warning" aria-hidden="true" />
+                  <div>
+                    <p className="font-semibold text-warning">Not medical advice</p>
+                    <p className="text-xs text-muted-foreground">
+                      If you or someone else is in crisis, contact local emergency services or a crisis hotline immediately.
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-[12px] border border-border/80 bg-muted/40 p-4 text-xs text-muted-foreground">
+                  <p>
+                    <strong className="text-foreground">Accessibility toggles:</strong> text size, high contrast, dyslexia-friendly font, and read-aloud live under the profile icon.
                   </p>
                 </div>
-              </div>
-
-              <Textarea
-                value={responses[currentStep - 1]}
-                onChange={(e) => handleResponseChange(e.target.value)}
-                placeholder="Share your observations here..."
-                className="min-h-[200px] resize-none text-base"
-              />
-
-              <div className="mt-6 flex justify-between items-center">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-                  disabled={currentStep === 1}
-                >
-                  Previous
-                </Button>
-                
-                <Button onClick={handleNext} size="lg">
-                  {currentStep === totalSteps ? "Complete Assessment" : "Next Question"}
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-border">
-                <p className="text-xs text-muted-foreground text-center">
-                  Your responses are encrypted and processed securely. No data is retained by default.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="mt-6 bg-muted/50 rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">
-              <strong className="text-foreground">Need help?</strong> If you're experiencing a crisis or
-              need immediate support, please contact a crisis helpline. This tool is for informational
-              purposes only and is not a substitute for professional care.
-            </p>
-          </div>
+              </CardContent>
+            </Card>
+          </aside>
         </div>
       </main>
     </div>
