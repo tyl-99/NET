@@ -4,8 +4,8 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-24 border-t border-[color:var(--color-border)] bg-[color:var(--color-card)]/80">
-      <div className="mx-auto max-w-7xl px-6 py-16 md:px-8">
+    <footer className="mt-20 border-t border-[color:var(--color-border)] bg-[color:var(--color-card)]/80">
+      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 md:px-8">
         <div className="grid gap-10 md:grid-cols-[minmax(0,_1.4fr)_repeat(3,_minmax(0,_1fr))]">
           <div className="space-y-5">
             <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-14 flex flex-col gap-4 border-t border-[color:var(--color-border)] pt-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+        <div className="mt-12 flex flex-col gap-4 border-t border-[color:var(--color-border)] pt-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
           <p>© {currentYear} N.E.T. All rights reserved. This tool offers guidance, not a medical diagnosis.</p>
           <p>Data retention defaults to OFF. You decide when to export or delete.</p>
         </div>
