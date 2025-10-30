@@ -1,7 +1,16 @@
 import { Link } from "react-router-dom";
+import { useThemePreference } from "@/hooks/useThemePreference";
+import type { ThemeName } from "@/hooks/useThemePreference";
+import { cn } from "@/lib/utils";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { theme, setTheme } = useThemePreference();
+
+  const themeOptions: ReadonlyArray<{ label: string; value: ThemeName }> = [
+    { label: "Calm", value: "calm" },
+    { label: "Midnight", value: "midnight" },
+  ];
 
   return (
     <footer className="mt-20 border-t border-[color:var(--color-border)] bg-[color:var(--color-card)]/80">
@@ -82,9 +91,32 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-[color:var(--color-border)] pt-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
-          <p>© {currentYear} N.E.T. All rights reserved. This tool offers guidance, not a medical diagnosis.</p>
-          <p>Data retention defaults to OFF. You decide when to export or delete.</p>
+        <div className="mt-12 flex flex-col gap-5 border-t border-[color:var(--color-border)] pt-6 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+          <div className="space-y-2 md:flex md:flex-wrap md:items-center md:gap-x-6 md:gap-y-1">
+            <p>© {currentYear} N.E.T. All rights reserved. This tool offers guidance, not a medical diagnosis.</p>
+            <p>Data retention defaults to OFF. You decide when to export or delete.</p>
+          </div>
+          <div className="flex flex-col gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground sm:flex-row sm:items-center sm:gap-4">
+            <span className="text-[0.625rem] font-semibold">Theme</span>
+            <div className="inline-flex rounded-full border border-[color:var(--color-border)] bg-[color:var(--color-card)] p-1 shadow-[var(--shadow-card)]">
+              {themeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setTheme(option.value)}
+                  className={cn(
+                    "min-w-[88px] rounded-full px-4 py-2 text-[0.7rem] font-semibold transition-colors duration-150",
+                    theme === option.value
+                      ? "bg-[var(--color-primary)] text-white shadow-sm"
+                      : "text-muted-foreground hover:text-[color:var(--color-ink)]"
+                  )}
+                  aria-pressed={theme === option.value}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </footer>
