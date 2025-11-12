@@ -1,12 +1,22 @@
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Settings } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { isAuthenticated } from "@/lib/auth";
 import SkipToContentLink from "./SkipToContentLink";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import AccessibilityControls from "./AccessibilityControls";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAccessibilityOpen, setIsAccessibilityOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleSignIn = () => {
@@ -68,6 +78,30 @@ const Navbar = () => {
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
+            <Sheet open={isAccessibilityOpen} onOpenChange={setIsAccessibilityOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full"
+                  aria-label="Accessibility options"
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Accessibility Options</SheetTitle>
+                  <SheetDescription>
+                    Customize your reading experience for better comfort and clarity.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-6">
+                  <AccessibilityControls onClose={() => setIsAccessibilityOpen(false)} />
+                </div>
+              </SheetContent>
+            </Sheet>
             <Button
               type="button"
               variant="outline"
@@ -109,6 +143,32 @@ const Navbar = () => {
             className="md:hidden border-t border-[color:var(--color-border)]/80 bg-[color:var(--color-bg)]/95 px-4 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] pt-6 shadow-[var(--shadow-card)]"
           >
             <div className="space-y-6">
+              <div className="border-b pb-4" style={{ borderColor: 'var(--color-border)' }}>
+                <Sheet open={isAccessibilityOpen} onOpenChange={setIsAccessibilityOpen}>
+                  <SheetTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full rounded-full font-medium"
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Accessibility
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent>
+                    <SheetHeader>
+                      <SheetTitle>Accessibility Options</SheetTitle>
+                      <SheetDescription>
+                        Customize your reading experience for better comfort and clarity.
+                      </SheetDescription>
+                    </SheetHeader>
+                    <div className="mt-6">
+                      <AccessibilityControls onClose={() => setIsAccessibilityOpen(false)} />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
               {navLinks.map((link) => (
                 <Link
                   key={link.href}
