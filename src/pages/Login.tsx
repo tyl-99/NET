@@ -14,8 +14,9 @@ type LocationState = {
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation<LocationState>();
-  const redirectPath = location.state?.from ?? "/assessment";
+  const location = useLocation();
+  const state = location.state as LocationState | undefined;
+  const redirectPath = state?.from ?? "/assessment";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
