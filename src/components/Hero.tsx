@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, Eye, Info } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const trustChips = [
   { label: "HIPAA-aligned mindset", icon: ShieldCheck },
@@ -17,13 +17,14 @@ const highlightStats = [
 
 const Hero = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleSignIn = () => {
     navigate("/login");
   };
 
   const handleStartAssessment = () => {
-    if (isAuthenticated()) {
+    if (user) {
       navigate("/assessment");
       return;
     }

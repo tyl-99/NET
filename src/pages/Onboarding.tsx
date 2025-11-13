@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Users, GraduationCap, User, Stethoscope, Check, ArrowRight, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const roles = [
   {
@@ -46,6 +46,7 @@ const steps = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [consents, setConsents] = useState({
     privacy: false,
@@ -55,10 +56,10 @@ const Onboarding = () => {
   const [retainData, setRetainData] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!user) {
       navigate("/login", { replace: true, state: { from: "/onboarding" } });
     }
-  }, [navigate]);
+  }, [navigate, user]);
 
   const allConsentsChecked = consents.privacy && consents.nonDiagnostic && consents.adult;
 

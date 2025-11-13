@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 
 const MobileActionBar = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ const MobileActionBar = () => {
   }, []);
 
   const handleStartAssessment = () => {
-    if (isAuthenticated()) {
+    if (user) {
       navigate("/assessment");
       return;
     }

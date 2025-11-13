@@ -2,19 +2,20 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { isAuthenticated } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import SkipToContentLink from "./SkipToContentLink";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const handleSignIn = () => {
     navigate("/login");
   };
 
   const handleStartAssessment = () => {
-    if (isAuthenticated()) {
+    if (user) {
       navigate("/assessment");
       return;
     }
@@ -68,23 +69,47 @@ const Navbar = () => {
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleSignIn}
-              className="rounded-full px-5 font-semibold"
-            >
-              Sign In
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleStartAssessment}
-              className="rounded-full px-6 shadow-[var(--shadow-card)]"
-            >
-              Start Assessment
-            </Button>
+            {user ? (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={signOut}
+                  className="rounded-full px-5 font-semibold"
+                >
+                  Sign Out
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleStartAssessment}
+                  className="rounded-full px-6 shadow-[var(--shadow-card)]"
+                >
+                  Start Assessment
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSignIn}
+                  className="rounded-full px-5 font-semibold"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleStartAssessment}
+                  className="rounded-full px-6 shadow-[var(--shadow-card)]"
+                >
+                  Start Assessment
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -120,29 +145,59 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="grid gap-3 sm:grid-cols-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full rounded-full font-semibold"
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleSignIn();
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="w-full rounded-full shadow-sm"
-                  onClick={() => {
-                    setIsOpen(false);
-                    handleStartAssessment();
-                  }}
-                >
-                  Start Assessment
-                </Button>
+                {user ? (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full rounded-full font-semibold"
+                      onClick={() => {
+                        setIsOpen(false);
+                        signOut();
+                      }}
+                    >
+                      Sign Out
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full rounded-full shadow-sm"
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleStartAssessment();
+                      }}
+                    >
+                      Start Assessment
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full rounded-full font-semibold"
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleSignIn();
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full rounded-full shadow-sm"
+                      onClick={() => {
+                        setIsOpen(false);
+                        handleStartAssessment();
+                      }}
+                    >
+                      Start Assessment
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
