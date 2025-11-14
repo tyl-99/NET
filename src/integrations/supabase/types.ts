@@ -18,22 +18,22 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          question_id: string
-          response_value: Json
+          question_value: string
+          response_value: string
           session_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          question_id: string
-          response_value: Json
+          question_value: string
+          response_value: string
           session_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          question_id?: string
-          response_value?: Json
+          question_value?: string
+          response_value?: string
           session_id?: string
         }
         Relationships: [
@@ -139,6 +139,27 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
