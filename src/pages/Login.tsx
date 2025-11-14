@@ -18,7 +18,7 @@ const Login = () => {
   const location = useLocation();
   const { toast } = useToast();
   const state = location.state as LocationState | undefined;
-  const redirectPath = state?.from ?? "/assessment";
+  const redirectPath = state?.from ?? "/onboarding";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -57,7 +57,7 @@ const Login = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/assessment`,
+          emailRedirectTo: `${window.location.origin}/onboarding`,
         },
       });
 

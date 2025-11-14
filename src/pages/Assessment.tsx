@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Clock, ShieldAlert, Volume2, BookOpen } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+
 
 interface Message {
   id: string;
@@ -29,7 +29,6 @@ const prompts = [
 const Assessment = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>(() => [
     {
       id: "prompt-0",
@@ -44,12 +43,6 @@ const Assessment = () => {
   const [readingMode, setReadingMode] = useState(false);
 
   const role = (location.state as { role?: string } | undefined)?.role ?? "guest";
-
-  useEffect(() => {
-    if (!user) {
-      navigate("/login", { replace: true, state: { from: "/assessment" } });
-    }
-  }, [navigate, user]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
