@@ -71,7 +71,7 @@ const Login = () => {
         title: "Account created!",
         description: "Welcome to N.E.T. Pre-Screen.",
       });
-      navigate(redirectPath, { replace: true });
+      // Navigation will be handled by onAuthStateChange
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -88,8 +88,10 @@ const Login = () => {
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
-      navigate(redirectPath, { replace: true });
+      // Navigation will be handled by onAuthStateChange
     }
+    
+    setLoading(false);
   };
 
   const handleGoogleSignIn = async () => {
