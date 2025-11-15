@@ -1,0 +1,105 @@
+{
+  "description": "Assessment API Schema Examples",
+  
+  "initial_request": {
+    "status": "ongoing",
+    "chat": "User: Yes, that's fine. I'm ready to start.\n\nAssistant: Great! Before we continue, please know that your responses will be kept confidential...\n\nUser: 26+\n\nAssistant: Thank you. Now, I'd like to understand a bit about your experience...",
+    "assessment": []
+  },
+  
+  "after_q1_answer": {
+    "status": "ongoing",
+    "chat": "User: Yes, that's fine. I'm ready to start.\n\nAssistant: Great! Before we continue, please know that your responses will be kept confidential...\n\nUser: 26+\n\nAssistant: Thank you. Now, I'd like to understand a bit about your experience...",
+    "assessment": [
+      {
+        "question": "Tell us about the learning wins and friction you notice most often.",
+        "answer": "I find it easier to learn when I have visual examples and step-by-step instructions. Reading long texts can be overwhelming."
+      }
+    ]
+  },
+  
+  "after_q2_answer": {
+    "status": "ongoing",
+    "chat": "User: Yes, that's fine. I'm ready to start.\n\nAssistant: Great! Before we continue, please know that your responses will be kept confidential...\n\nUser: 26+\n\nAssistant: Thank you. Now, I'd like to understand a bit about your experience...",
+    "assessment": [
+      {
+        "question": "Tell us about the learning wins and friction you notice most often.",
+        "answer": "I find it easier to learn when I have visual examples and step-by-step instructions. Reading long texts can be overwhelming."
+      },
+      {
+        "question": "When does support seem to help, and what still feels tough?",
+        "answer": "Support helps when I can ask questions and get immediate feedback. It's still tough when I have to process too much information at once."
+      }
+    ]
+  },
+  
+  "after_q3_answer": {
+    "status": "ongoing",
+    "chat": "User: Yes, that's fine. I'm ready to start.\n\nAssistant: Great! Before we continue, please know that your responses will be kept confidential...\n\nUser: 26+\n\nAssistant: Thank you. Now, I'd like to understand a bit about your experience...",
+    "assessment": [
+      {
+        "question": "Tell us about the learning wins and friction you notice most often.",
+        "answer": "I find it easier to learn when I have visual examples and step-by-step instructions. Reading long texts can be overwhelming."
+      },
+      {
+        "question": "When does support seem to help, and what still feels tough?",
+        "answer": "Support helps when I can ask questions and get immediate feedback. It's still tough when I have to process too much information at once."
+      },
+      {
+        "question": "Are there any sensory, focus, or emotional cues we should keep in mind?",
+        "answer": "I'm sensitive to loud noises and bright lights. I also need quiet time to focus properly."
+      }
+    ]
+  },
+  
+  "after_q4_answer": {
+    "status": "ongoing",
+    "chat": "User: Yes, that's fine. I'm ready to start.\n\nAssistant: Great! Before we continue, please know that your responses will be kept confidential...\n\nUser: 26+\n\nAssistant: Thank you. Now, I'd like to understand a bit about your experience...",
+    "assessment": [
+      {
+        "question": "Tell us about the learning wins and friction you notice most often.",
+        "answer": "I find it easier to learn when I have visual examples and step-by-step instructions. Reading long texts can be overwhelming."
+      },
+      {
+        "question": "When does support seem to help, and what still feels tough?",
+        "answer": "Support helps when I can ask questions and get immediate feedback. It's still tough when I have to process too much information at once."
+      },
+      {
+        "question": "Are there any sensory, focus, or emotional cues we should keep in mind?",
+        "answer": "I'm sensitive to loud noises and bright lights. I also need quiet time to focus properly."
+      },
+      {
+        "question": "Share any accommodations or strategies that already work well.",
+        "answer": "Taking breaks every 30 minutes helps. I also use noise-cancelling headphones and prefer dim lighting."
+      }
+    ]
+  },
+  
+  "after_q5_answer_final": {
+    "status": "done",
+    "chat": "User: Yes, that's fine. I'm ready to start.\n\nAssistant: Great! Before we continue, please know that your responses will be kept confidential...\n\nUser: 26+\n\nAssistant: Thank you. Now, I'd like to understand a bit about your experience...",
+    "assessment": [
+      {
+        "question": "Tell us about the learning wins and friction you notice most often.",
+        "answer": "I find it easier to learn when I have visual examples and step-by-step instructions. Reading long texts can be overwhelming."
+      },
+      {
+        "question": "When does support seem to help, and what still feels tough?",
+        "answer": "Support helps when I can ask questions and get immediate feedback. It's still tough when I have to process too much information at once."
+      },
+      {
+        "question": "Are there any sensory, focus, or emotional cues we should keep in mind?",
+        "answer": "I'm sensitive to loud noises and bright lights. I also need quiet time to focus properly."
+      },
+      {
+        "question": "Share any accommodations or strategies that already work well.",
+        "answer": "Taking breaks every 30 minutes helps. I also use noise-cancelling headphones and prefer dim lighting."
+      },
+      {
+        "question": "What goal would feel like progress after today?",
+        "answer": "I'd like to better understand my learning style and find more effective strategies for managing my focus and sensory needs."
+      }
+    ]
+  }
+}
+

@@ -17,11 +17,11 @@ const Navbar = () => {
 
   const handleStartAssessment = () => {
     if (user) {
-      navigate("/assessment");
+      navigate("/onboarding");
       return;
     }
 
-    navigate("/login", { state: { from: "/assessment" } });
+    navigate("/login", { state: { from: "/onboarding" } });
   };
 
   const navLinks = [

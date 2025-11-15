@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Users, GraduationCap, User, Stethoscope, Check, ArrowRight, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/contexts/AuthContext";
+import { getActiveAssessmentSession, getAssessmentBySessionId, updateAssessmentSessionStatus, createAssessmentSession } from "@/lib/session";
 
 
 const roles = [
@@ -46,6 +49,7 @@ const steps = [
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [consents, setConsents] = useState({
     privacy: false,
@@ -53,6 +57,9 @@ const Onboarding = () => {
     adult: false,
   });
   const [retainData, setRetainData] = useState(false);
+  const [showActiveAssessmentDialog, setShowActiveAssessmentDialog] = useState(false);
+  const [activeSession, setActiveSession] = useState<any>(null);
+  const [isChecking, setIsChecking] = useState(false);
 
   const allConsentsChecked = consents.privacy && consents.nonDiagnostic && consents.adult;
 
@@ -79,7 +86,7 @@ const Onboarding = () => {
     ),
   );
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!selectedRole) {
       toast.error("Select the role that fits you best.");
       return;
@@ -89,8 +96,99 @@ const Onboarding = () => {
       return;
     }
 
+    // Check for active assessment session
+    setIsChecking(true);
+    const activeSession = await getActiveAssessmentSession(user?.id || null);
+    
+    if (activeSession) {
+      // User has active assessment - show dialog
+      setActiveSession(activeSession);
+      setShowActiveAssessmentDialog(true);
+      setIsChecking(false);
+      return;
+    }
+
+    // No active assessment - proceed to chatbot
+    setIsChecking(false);
+    
+    // Map role ID to role text
+    const roleTextMap: Record<string, string> = {
+      "parent": "Parent or caregiver",
+      "teacher": "Teacher or school",
+      "adult": "Adult self-check",
+      "clinician": "Clinician intake"
+    };
+    const roleText = roleTextMap[selectedRole] || selectedRole;
+    
     toast.success("We will keep it calm and clear.");
-    navigate("/assessment", { state: { role: selectedRole, retainData } });
+    navigate("/chatbot", { state: { role: roleText, retainData } });
+  };
+
+  const handleContinueActiveAssessment = async () => {
+    if (!activeSession) return;
+    
+    // Get assessment data with QNA
+    const assessment = await getAssessmentBySessionId(activeSession.id);
+    
+    if (assessment) {
+      // Convert chat string back to messages format
+      const chatMessages = assessment.chat.split("\n\n").map((line: string) => {
+        if (line.startsWith("User:")) {
+          return { role: "user" as const, content: line.replace("User: ", "") };
+        } else if (line.startsWith("Assistant:")) {
+          return { role: "assistant" as const, content: line.replace("Assistant: ", "") };
+        }
+        return null;
+      }).filter(Boolean);
+
+      // Navigate to assessment page with existing data
+      navigate("/assessment", {
+        state: {
+          role: selectedRole,
+          retainData,
+          chatContext: chatMessages,
+          fromChatbot: true,
+          existingSession: true,
+          existingQNA: assessment.qna
+        }
+      });
+    } else {
+      // Fallback: just navigate with session info
+      navigate("/assessment", {
+        state: {
+          role: selectedRole,
+          retainData,
+          existingSession: true
+        }
+      });
+    }
+    
+    setShowActiveAssessmentDialog(false);
+  };
+
+  const handleStartNewAssessment = async () => {
+    if (!activeSession) return;
+    
+    // Cancel the active session
+    await updateAssessmentSessionStatus(activeSession.id, "abandoned");
+    
+    // Create new active session
+    const newSession = await createAssessmentSession(user?.id || null);
+    
+    setShowActiveAssessmentDialog(false);
+    toast.success("Starting new assessment session.");
+    
+    // Map role ID to role text
+    const roleTextMap: Record<string, string> = {
+      "parent": "Parent or caregiver",
+      "teacher": "Teacher or school",
+      "adult": "Adult self-check",
+      "clinician": "Clinician intake"
+    };
+    const roleText = roleTextMap[selectedRole] || selectedRole;
+    
+    // Proceed to chatbot for new session
+    navigate("/chatbot", { state: { role: roleText, retainData } });
   };
 
   return (
@@ -258,8 +356,13 @@ const Onboarding = () => {
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">Ready when you are</p>
                 <p className="text-lg text-[color:var(--color-ink)]">The pre-screen takes about 15 minutes, and you can pause anytime.</p>
               </div>
-              <Button size="lg" className="min-w-[200px]" onClick={handleContinue}>
-                Start calm session
+              <Button 
+                size="lg" 
+                className="min-w-[200px]" 
+                onClick={handleContinue}
+                disabled={isChecking}
+              >
+                {isChecking ? "Checking..." : "Start calm session"}
                 <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
               </Button>
             </div>
@@ -268,6 +371,26 @@ const Onboarding = () => {
       </main>
 
       <Footer />
+
+      {/* Active Assessment Dialog */}
+      <Dialog open={showActiveAssessmentDialog} onOpenChange={setShowActiveAssessmentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>You have an active assessment</DialogTitle>
+            <DialogDescription>
+              We found an assessment session in progress. Would you like to continue where you left off, or start a new assessment?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleStartNewAssessment}>
+              Start New
+            </Button>
+            <Button onClick={handleContinueActiveAssessment}>
+              Continue Assessment
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -1,0 +1,47 @@
+{
+  "query": "query ExecuteWorkflow($workflowId: String!, $input: JSON) { executeWorkflow(workflowId: $workflowId payload: { input: $input }) { status result } }",
+  "variables": {
+    "workflowId": "32cd511a-aebc-40c8-8ef9-5651a2d6be99",
+    "input": {
+      "messages": [
+        {
+          "role": "system",
+          "content": "You are a helpful assistant."
+        },
+        {
+          "role": "assistant",
+          "content": "Hi there! I'm NET, a friendly pre-screen assistant for neurodiversity.\n\nI can ask you a short series of questions about attention, learning, communication, and sensory comfort to help you decide on next steps. This is not a diagnosis.\n\nBefore we begin, is it ok for me to ask you these questions? Also, please know that your responses will be kept confidential and used only to help guide our conversation."
+        },
+        {
+          "role": "user",
+          "content": "Yes, that's fine. I'm ready to start."
+        },
+        {
+          "role": "assistant",
+          "content": "Great! Before we continue, please know that your responses will be kept confidential and used only to provide you with relevant information and resources.\n\nFirst, are you in the following age range?\n\n*   Under 18\n*   18-25\n*   26+"
+        },
+        {
+          "role": "user",
+          "content": "26+"
+        },
+        {
+          "role": "assistant",
+          "content": "Thank you. Now, I'd like to understand a bit about your experience. Can you tell me about any challenges you've noticed with focus or attention in your daily life?"
+        },
+        {
+          "role": "user",
+          "content": "I often find it hard to concentrate when there's background noise, and I get distracted easily when working on tasks."
+        },
+        {
+          "role": "assistant",
+          "content": "I appreciate you sharing that. How about learning or processing information? Do you find that you need information presented in a certain way, or do you prefer certain learning methods?"
+        },
+        {
+          "role": "user",
+          "content": "I learn better when I can see visual examples and have time to process things step by step. Reading long texts can be overwhelming."
+        }
+      ]
+    }
+  }
+}
+

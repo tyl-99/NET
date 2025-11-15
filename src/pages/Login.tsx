@@ -17,8 +17,8 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const state = location.state as LocationState | undefined;
-  const redirectPath = state?.from ?? "/onboarding";
+  // Always redirect to onboarding after login
+  const redirectPath = "/onboarding";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -57,7 +57,7 @@ const Login = () => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/onboarding`,
+          emailRedirectTo: `${window.location.origin}/chatbot`,
         },
       });
 
@@ -99,7 +99,7 @@ const Login = () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}${redirectPath}`,
+        redirectTo: `${window.location.origin}/chatbot`,
       },
     });
 
@@ -192,11 +192,7 @@ const Login = () => {
                       ? (isSignUp ? "Creating account..." : "Signing in...") 
                       : isSignUp 
                         ? "Create account" 
-                        : redirectPath === "/onboarding"
-                          ? "Continue to onboarding"
-                          : redirectPath === "/assessment"
-                          ? "Continue to assessment"
-                          : "Continue"
+                        : "Continue to chatbot"
                     }
                   </Button>
                   

@@ -19,16 +19,90 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Handle OAuth callback - check for hash fragments or query params
+    const handleAuthCallback = async () => {
+      // Check hash fragments (Supabase OAuth uses hash)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      
+      // Also check query params (some OAuth flows use query)
+      const searchParams = new URLSearchParams(window.location.search);
+      const queryAccessToken = searchParams.get('access_token');
+      const queryRefreshToken = searchParams.get('refresh_token');
+      
+      const token = accessToken || queryAccessToken;
+      const refresh = refreshToken || queryRefreshToken;
+      
+      if (token && refresh) {
+        try {
+          // Set the session first
+          const { data: { session }, error } = await supabase.auth.setSession({
+            access_token: token,
+            refresh_token: refresh,
+          });
+          
+          if (error) {
+            console.error('Error setting session:', error);
+            return;
+          }
+          
+          if (session) {
+            setSession(session);
+            setUser(session.user);
+            setLoading(false);
+            
+            // Force redirect to onboarding regardless of current URL
+            // Clear any hash/query params and redirect
+            window.history.replaceState(null, '', window.location.origin);
+            navigate("/onboarding", { replace: true });
+            return;
+          }
+        } catch (error) {
+          console.error('Error handling OAuth callback:', error);
+        }
+      }
+      
+      // If we're on a remote URL (like Amplify) but have a session, redirect to chatbot
+      if (window.location.hostname.includes('amplifyapp.com') || 
+          window.location.hostname.includes('amazonaws.com')) {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session) {
+            // Redirect to localhost or your actual domain
+            const targetUrl = window.location.protocol + '//' + window.location.hostname.replace(/.*amplifyapp\.com.*/, 'localhost:8080') + '/chatbot';
+            if (targetUrl.includes('localhost')) {
+              window.location.href = 'http://localhost:8080/chatbot';
+            } else {
+              navigate("/chatbot", { replace: true });
+            }
+          }
+        });
+      }
+    };
+
+    handleAuthCallback();
+
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Always redirect to onboarding after successful login (any method)
+        if (event === 'SIGNED_IN' && session) {
+          const currentPath = window.location.pathname;
+          if (currentPath === '/' || currentPath === '/login') {
+            // Small delay to ensure URL is cleaned up
+            setTimeout(() => {
+              navigate("/onboarding", { replace: true });
+            }, 100);
+          }
+        }
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -36,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
