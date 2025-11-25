@@ -325,15 +325,33 @@ export async function getAssessmentBySessionId(sessionId: string): Promise<Asses
  * Get active assessment session for user
  */
 export async function getActiveAssessmentSession(userId: string | null): Promise<AssessmentSession | null> {
-  if (!userId) return null;
+  console.log('[getActiveAssessmentSession] Called with userId:', userId);
+  
+  if (!userId) {
+    console.log('[getActiveAssessmentSession] No userId provided, returning null');
+    return null;
+  }
   
   try {
+    console.log('[getActiveAssessmentSession] Checking for valid session...');
     // Ensure we have a valid session for authenticated requests
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    console.log('[getActiveAssessmentSession] Session check result:', {
+      hasSession: !!session,
+      hasError: !!sessionError,
+      userId: session?.user?.id,
+      sessionError: sessionError ? {
+        message: sessionError.message,
+        status: sessionError.status,
+      } : null,
+    });
+    
     if (!session) {
-      console.warn("No active session found for authenticated request");
+      console.warn("[getActiveAssessmentSession] No active session found for authenticated request");
     }
     
+    console.log('[getActiveAssessmentSession] Querying assessment_sessions table...');
     const { data, error } = await supabase
       .from("assessment_sessions")
       .select("*")
@@ -343,15 +361,30 @@ export async function getActiveAssessmentSession(userId: string | null): Promise
       .limit(1)
       .single();
 
+    console.log('[getActiveAssessmentSession] Query result:', {
+      hasData: !!data,
+      hasError: !!error,
+      dataId: data?.id,
+      error: error ? {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      } : null,
+    });
+
     if (error) {
-      console.error("Error fetching active assessment session:", error);
+      console.error("[getActiveAssessmentSession] Error fetching active assessment session:", error);
+      console.error("[getActiveAssessmentSession] Error details:", JSON.stringify(error, null, 2));
       // No active session found
       return null;
     }
 
+    console.log('[getActiveAssessmentSession] Successfully retrieved session:', data?.id);
     return data as AssessmentSession;
   } catch (error) {
-    console.error("Error in getActiveAssessmentSession:", error);
+    console.error("[getActiveAssessmentSession] Exception in getActiveAssessmentSession:", error);
+    console.error("[getActiveAssessmentSession] Error stack:", error instanceof Error ? error.stack : 'No stack');
     return null;
   }
 }

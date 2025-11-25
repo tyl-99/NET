@@ -16,25 +16,81 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 
 // Create a custom fetch that ensures apikey header is always included
 const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promise<Response> => {
-  const headers = new Headers(options?.headers);
+  // Convert URL to string for checking
+  const urlString = typeof url === 'string' ? url : url instanceof URL ? url.toString() : String(url);
   
-  // Ensure apikey header is always present
-  if (!headers.has('apikey')) {
-    headers.set('apikey', SUPABASE_PUBLISHABLE_KEY);
+  console.log('[Supabase Fetch] Request intercepted:', {
+    url: urlString,
+    method: options?.method || 'GET',
+    timestamp: new Date().toISOString(),
+  });
+  
+  // Only intercept Supabase API requests
+  if (!urlString.includes('supabase.co')) {
+    console.log('[Supabase Fetch] Not a Supabase URL, passing through');
+    return fetch(url, options);
   }
+  
+  // Handle headers - convert to Headers object if needed
+  const originalHeaders = options?.headers;
+  console.log('[Supabase Fetch] Original headers:', originalHeaders);
+  
+  const headers = new Headers(originalHeaders);
+  
+  // Log existing headers
+  const existingHeaders: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    existingHeaders[key] = key === 'apikey' ? value.substring(0, 20) + '...' : value;
+  });
+  console.log('[Supabase Fetch] Existing headers:', existingHeaders);
+  
+  // ALWAYS set apikey header for Supabase requests
+  const hadApikey = headers.has('apikey');
+  headers.set('apikey', SUPABASE_PUBLISHABLE_KEY);
+  console.log('[Supabase Fetch] apikey header:', {
+    hadApikey,
+    nowSet: headers.has('apikey'),
+    keyPreview: SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...',
+  });
   
   // Ensure Content-Type is set for POST/PUT/PATCH requests
   if (options?.method && ['POST', 'PUT', 'PATCH'].includes(options.method.toUpperCase())) {
     if (!headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
+      console.log('[Supabase Fetch] Added Content-Type header');
     }
   }
   
-  return fetch(url, {
+  // Log all final headers (sanitized)
+  const finalHeaders: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    finalHeaders[key] = key === 'apikey' || key === 'authorization' 
+      ? value.substring(0, 20) + '...' 
+      : value;
+  });
+  console.log('[Supabase Fetch] Final headers being sent:', finalHeaders);
+  
+  const response = await fetch(url, {
     ...options,
     headers,
   });
+  
+  console.log('[Supabase Fetch] Response received:', {
+    status: response.status,
+    statusText: response.statusText,
+    url: urlString,
+    ok: response.ok,
+  });
+  
+  return response;
 };
+
+console.log('[Supabase Client] Initializing Supabase client:', {
+  url: SUPABASE_URL,
+  hasApiKey: !!SUPABASE_PUBLISHABLE_KEY,
+  apiKeyPreview: SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...',
+  usingCustomFetch: true,
+});
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
@@ -49,3 +105,5 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     fetch: customFetch,
   },
 });
+
+console.log('[Supabase Client] Client initialized successfully');

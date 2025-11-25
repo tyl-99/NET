@@ -20,12 +20,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('[AuthContext] useEffect triggered');
+    
     // Handle OAuth callback - check for hash fragments or query params
     const handleAuthCallback = async () => {
+      console.log('[AuthContext] Checking for OAuth callback...');
+      console.log('[AuthContext] Current URL:', window.location.href);
+      console.log('[AuthContext] Hash:', window.location.hash);
+      console.log('[AuthContext] Search:', window.location.search);
+      
       // Check hash fragments (Supabase OAuth uses hash)
       const hashParams = new URLSearchParams(window.location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       const refreshToken = hashParams.get('refresh_token');
+      
+      console.log('[AuthContext] Hash params:', {
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+        accessTokenPreview: accessToken ? accessToken.substring(0, 20) + '...' : null,
+      });
       
       // Also check query params (some OAuth flows use query)
       const searchParams = new URLSearchParams(window.location.search);
@@ -35,19 +48,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const token = accessToken || queryAccessToken;
       const refresh = refreshToken || queryRefreshToken;
       
+      console.log('[AuthContext] Final tokens:', {
+        hasToken: !!token,
+        hasRefresh: !!refresh,
+        tokenSource: accessToken ? 'hash' : queryAccessToken ? 'query' : 'none',
+      });
+      
       if (token && refresh) {
         setIsProcessingOAuth(true);
         setLoading(true);
+        console.log('[AuthContext] Processing OAuth callback...');
         try {
-          console.log('Processing OAuth callback...');
+          console.log('[AuthContext] Calling supabase.auth.setSession...');
           // Set the session first
           const { data: { session }, error } = await supabase.auth.setSession({
             access_token: token,
             refresh_token: refresh,
           });
           
+          console.log('[AuthContext] setSession response:', {
+            hasSession: !!session,
+            hasError: !!error,
+            error: error ? {
+              message: error.message,
+              status: error.status,
+            } : null,
+            userId: session?.user?.id,
+          });
+          
           if (error) {
-            console.error('Error setting session:', error);
+            console.error('[AuthContext] Error setting session:', error);
+            console.error('[AuthContext] Error details:', JSON.stringify(error, null, 2));
             setIsProcessingOAuth(false);
             setLoading(false);
             // Redirect to login on error
@@ -56,24 +87,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
           
           if (session) {
-            console.log('OAuth session set successfully');
+            console.log('[AuthContext] OAuth session set successfully:', {
+              userId: session.user.id,
+              email: session.user.email,
+              expiresAt: session.expires_at,
+            });
             setSession(session);
             setUser(session.user);
             setIsProcessingOAuth(false);
             setLoading(false);
             
             // Clear hash/query params and redirect to onboarding
+            console.log('[AuthContext] Clearing URL and redirecting to /onboarding');
             window.history.replaceState(null, '', '/onboarding');
             navigate("/onboarding", { replace: true });
             return;
+          } else {
+            console.warn('[AuthContext] No session returned from setSession');
           }
         } catch (error) {
-          console.error('Error handling OAuth callback:', error);
+          console.error('[AuthContext] Exception handling OAuth callback:', error);
+          console.error('[AuthContext] Error stack:', error instanceof Error ? error.stack : 'No stack');
           setIsProcessingOAuth(false);
           setLoading(false);
           navigate("/login", { replace: true });
         }
         return; // Exit early if we processed OAuth
+      } else {
+        console.log('[AuthContext] No OAuth tokens found in URL');
       }
       
       // If we're on a remote URL (like Amplify) but have a session, redirect to onboarding
@@ -92,16 +133,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     handleAuthCallback();
 
     // Set up auth state listener
+    console.log('[AuthContext] Setting up auth state listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('[AuthContext] Auth state changed:', {
+          event,
+          hasSession: !!session,
+          userId: session?.user?.id,
+          email: session?.user?.email,
+        });
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
         
         // Always redirect to onboarding after successful login (any method)
         if (event === 'SIGNED_IN' && session) {
+          console.log('[AuthContext] User signed in, checking redirect...');
           const currentPath = window.location.pathname;
+          console.log('[AuthContext] Current path:', currentPath);
           if (currentPath === '/' || currentPath === '/login') {
+            console.log('[AuthContext] Redirecting to /onboarding...');
             // Small delay to ensure URL is cleaned up
             setTimeout(() => {
               navigate("/onboarding", { replace: true });
@@ -112,7 +164,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    console.log('[AuthContext] Checking for existing session...');
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('[AuthContext] getSession result:', {
+        hasSession: !!session,
+        hasError: !!error,
+        userId: session?.user?.id,
+        error: error ? {
+          message: error.message,
+          status: error.status,
+        } : null,
+      });
+      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
