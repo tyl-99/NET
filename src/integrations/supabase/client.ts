@@ -70,10 +70,47 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promi
   });
   console.log('[Supabase Fetch] Final headers being sent:', finalHeaders);
   
-  const response = await fetch(url, {
-    ...options,
-    headers,
+  // CRITICAL: Verify apikey is actually in headers
+  const apikeyValue = headers.get('apikey');
+  console.log('[Supabase Fetch] VERIFICATION - apikey header value:', {
+    exists: !!apikeyValue,
+    length: apikeyValue?.length,
+    matchesExpected: apikeyValue === SUPABASE_PUBLISHABLE_KEY,
+    preview: apikeyValue?.substring(0, 30) + '...',
   });
+  
+  // Also log the actual headers object structure
+  console.log('[Supabase Fetch] Headers object type:', headers.constructor.name);
+  console.log('[Supabase Fetch] Headers entries:', Array.from(headers.entries()).map(([k, v]) => [
+    k, 
+    k === 'apikey' || k === 'authorization' ? v.substring(0, 20) + '...' : v
+  ]));
+  
+  // Convert Headers object to plain object for fetch (more reliable)
+  const headersObj: Record<string, string> = {};
+  headers.forEach((value, key) => {
+    headersObj[key] = value;
+  });
+  
+  console.log('[Supabase Fetch] Converting headers to plain object:', {
+    keys: Object.keys(headersObj),
+    hasApikey: 'apikey' in headersObj,
+    apikeyPreview: headersObj['apikey']?.substring(0, 30) + '...',
+    allKeys: Object.keys(headersObj).join(', '),
+  });
+  
+  const fetchOptions: RequestInit = {
+    ...options,
+    headers: headersObj, // Use plain object instead of Headers instance
+  };
+  
+  console.log('[Supabase Fetch] Final fetch options:', {
+    method: fetchOptions.method,
+    headersKeys: Object.keys(fetchOptions.headers as Record<string, string> || {}),
+    url: urlString,
+  });
+  
+  const response = await fetch(url, fetchOptions);
   
   console.log('[Supabase Fetch] Response received:', {
     status: response.status,
