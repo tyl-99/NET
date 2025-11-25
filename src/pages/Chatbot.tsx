@@ -8,11 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Send, Loader2, Bot, User, ArrowRight } from "lucide-react";
 import { executeLamaticWorkflow, Message } from "@/lib/lamatic";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Chatbot = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   // Get role from location state
   const locationState = location.state as { role?: string; retainData?: boolean } | undefined;
@@ -54,7 +56,7 @@ const Chatbot = () => {
         const initialMessages: Message[] = [
           { role: "system", content: "You are a helpful assistant." },
         ];
-        const response = await executeLamaticWorkflow(initialMessages, userRole);
+        const response = await executeLamaticWorkflow(initialMessages, userRole, user?.id);
         
         const assistantMessage: Message = { 
           role: "assistant", 
@@ -91,7 +93,7 @@ const Chatbot = () => {
 
     try {
       // Pass role as separate key-value in API request
-      const response = await executeLamaticWorkflow(newMessages, userRole);
+      const response = await executeLamaticWorkflow(newMessages, userRole, user?.id);
       
       const assistantMessage: Message = { 
         role: "assistant", 
@@ -228,29 +230,29 @@ const Chatbot = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Next Button - Below chatbot, aligned right */}
+          <div className="flex justify-end mt-4">
+            <Button
+              onClick={() => {
+                // Pass the entire chat context to assessment page via state
+                navigate("/assessment", {
+                  state: {
+                    chatContext: messages,
+                    fromChatbot: true
+                  }
+                });
+              }}
+              size="lg"
+              className="shadow-lg"
+            >
+              Next
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
         </div>
       </main>
       <Footer />
-      
-      {/* Next Button - Fixed bottom right */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Button
-          onClick={() => {
-            // Pass the entire chat context to assessment page via state
-            navigate("/assessment", {
-              state: {
-                chatContext: messages,
-                fromChatbot: true
-              }
-            });
-          }}
-          size="lg"
-          className="shadow-lg"
-        >
-          Next
-          <ArrowRight className="ml-2 h-5 w-5" />
-        </Button>
-      </div>
     </div>
   );
 };

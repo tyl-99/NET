@@ -216,3 +216,350 @@
     background-color: hsl(var(--muted-foreground));
   }
 }
+
+/* Results page content styling (for HTML display, not print) */
+.results-content style,
+.results-content .page-break {
+  display: none !important; /* Hide the style tag content and page-break divs */
+}
+
+.results-content h1,
+.results-content h2,
+.results-content h3,
+.results-content h4,
+.results-content h5,
+.results-content h6 {
+  color: #1e3a8a !important; /* Dark blue for headings */
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  margin-top: 1.5em !important;
+  margin-bottom: 0.75em !important;
+}
+
+.results-content h1 {
+  font-size: 2em !important;
+  color: #1e40af !important; /* Slightly lighter blue for h1 */
+}
+
+.results-content h2 {
+  font-size: 1.6em !important;
+}
+
+.results-content h3 {
+  font-size: 1.3em !important;
+}
+
+.results-content p {
+  color: #374151 !important; /* Dark gray for body text */
+  line-height: 1.7 !important;
+  margin-bottom: 1em !important;
+}
+
+.results-content ul,
+.results-content ol {
+  color: #374151 !important;
+  line-height: 1.6 !important;
+}
+
+.results-content li {
+  margin-bottom: 0.5em !important;
+}
+
+.results-content strong {
+  color: #1f2937 !important;
+  font-weight: 600 !important;
+}
+
+.results-content table {
+  font-size: 0.95em !important;
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: fixed !important;
+}
+
+.results-content th {
+  background-color: #f3f4f6 !important;
+  color: #1e3a8a !important;
+  font-weight: 600 !important;
+  border: 1px solid #ddd !important;
+  padding: 10px 12px !important;
+  text-align: left !important;
+  vertical-align: top !important;
+}
+
+.results-content td {
+  color: #374151 !important;
+  border: 1px solid #ddd !important;
+  padding: 10px 12px !important;
+  text-align: left !important;
+  vertical-align: top !important;
+}
+
+.results-content thead {
+  background-color: #f3f4f6 !important;
+}
+
+.results-content caption {
+  text-align: left !important;
+  font-weight: 600 !important;
+  color: #1e3a8a !important;
+  margin-bottom: 0.5em !important;
+  font-size: 1.1em !important;
+}
+
+.results-content .footer {
+  color: #6b7280 !important;
+  font-size: 0.875em !important;
+}
+
+/* Print styles for PDF export */
+@media print {
+  /* Hide everything except the PDF content */
+  body.printing-pdf > *:not(#root) {
+    display: none !important;
+  }
+  
+  body.printing-pdf > header,
+  body.printing-pdf > footer,
+  body.printing-pdf header,
+  body.printing-pdf nav,
+  body.printing-pdf .sm\:absolute,
+  body.printing-pdf button,
+  body.printing-pdf style,
+  body.printing-pdf [data-sonner-toaster],
+  body.printing-pdf [class*="toast"],
+  body.printing-pdf [class*="Toaster"],
+  body.printing-pdf [role="status"],
+  body.printing-pdf [role="alert"] {
+    display: none !important;
+  }
+  
+  /* Only show header and main INSIDE the PDF content */
+  body.printing-pdf .pdf-content header,
+  body.printing-pdf .pdf-content main {
+    display: block !important;
+  }
+  
+  /* Ensure PDF content is visible */
+  body.printing-pdf #root,
+  body.printing-pdf .pdf-content,
+  body.printing-pdf .pdf-content *,
+  body.printing-pdf section,
+  body.printing-pdf .p-6,
+  body.printing-pdf .prose {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  /* Reset list display for ul/ol inside content */
+  body.printing-pdf .pdf-content ul,
+  body.printing-pdf .pdf-content ol {
+    display: block !important;
+  }
+  
+  body.printing-pdf .pdf-content li {
+    display: list-item !important;
+  }
+  
+  body.printing-pdf .pdf-content table {
+    display: table !important;
+  }
+  
+  body.printing-pdf .pdf-content tr {
+    display: table-row !important;
+  }
+  
+  body.printing-pdf .pdf-content td,
+  body.printing-pdf .pdf-content th {
+    display: table-cell !important;
+  }
+  
+  /* Better table formatting for print */
+  body.printing-pdf .pdf-content table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    margin-bottom: 1em !important;
+    table-layout: fixed !important;
+    font-size: 10pt !important;
+  }
+  
+  body.printing-pdf .pdf-content thead,
+  body.printing-pdf .pdf-content tbody {
+    display: table-row-group !important;
+  }
+  
+  body.printing-pdf .pdf-content th,
+  body.printing-pdf .pdf-content td {
+    border: 1px solid #999 !important;
+    padding: 8px 10px !important;
+    text-align: left !important;
+    vertical-align: top !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+    line-height: 1.4 !important;
+  }
+  
+  body.printing-pdf .pdf-content th {
+    background-color: #f2f2f2 !important;
+    font-weight: 600 !important;
+    background-clip: padding-box !important;
+  }
+  
+  body.printing-pdf .pdf-content thead {
+    background-color: #f2f2f2 !important;
+  }
+  
+  body.printing-pdf .pdf-content tbody tr {
+    page-break-inside: avoid !important;
+  }
+  
+  body.printing-pdf .pdf-content caption {
+    text-align: left !important;
+    font-weight: 600 !important;
+    margin-bottom: 0.5em !important;
+    font-size: 11pt !important;
+  }
+  
+  /* Force consistent column widths */
+  body.printing-pdf .pdf-content table[scope] th,
+  body.printing-pdf .pdf-content table[scope] td {
+    width: auto !important;
+  }
+  
+  /* Hide footer and page-break divs in print */
+  body.printing-pdf .footer,
+  body.printing-pdf footer,
+  body.printing-pdf .page-break,
+  body.printing-pdf [class*="footer"],
+  body.printing-pdf [class*="page-break"] {
+    display: none !important;
+  }
+  
+  /* Ensure proper page layout */
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+  
+  /* Better typography for print */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    font-family: 'Georgia', 'Times New Roman', serif !important;
+    line-height: 1.7 !important;
+    font-size: 11pt !important;
+  }
+  
+  /* Improve header spacing */
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0.02em !important;
+    word-spacing: 0.05em !important;
+    font-weight: 600 !important;
+    margin-top: 1.2em !important;
+    margin-bottom: 0.6em !important;
+  }
+  
+  h1 {
+    font-size: 18pt !important;
+    letter-spacing: 0.03em !important;
+  }
+  
+  h2 {
+    font-size: 15pt !important;
+  }
+  
+  h3 {
+    font-size: 13pt !important;
+  }
+  
+  /* Better paragraph spacing */
+  p {
+    margin-bottom: 0.8em !important;
+    text-align: justify !important;
+    word-spacing: 0.02em !important;
+  }
+  
+  /* Better list spacing */
+  ul, ol {
+    margin-bottom: 1em !important;
+    line-height: 1.6 !important;
+  }
+  
+  li {
+    margin-bottom: 0.4em !important;
+  }
+  
+  /* Override forced section breaks from API HTML */
+  .section-break,
+  div[class*="section-break"],
+  div[class*="page-break"] {
+    display: none !important;
+    page-break-before: auto !important;
+    page-break-after: auto !important;
+  }
+  
+  /* Smart page break controls - less aggressive */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
+  
+  /* Only keep small lists together (more than 10 items can break) */
+  li {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Prevent orphans and widows in paragraphs */
+  p {
+    orphans: 2 !important;
+    widows: 2 !important;
+  }
+  
+  /* Keep small blockquotes together */
+  blockquote, pre {
+    page-break-inside: avoid !important;
+  }
+  
+  /* Make content use full width for print */
+  .prose {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  /* Remove constraining styles for print */
+  body.printing-pdf .prose,
+  body.printing-pdf .pdf-content,
+  body.printing-pdf [style*="maxWidth"],
+  body.printing-pdf div[ref] {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Remove card padding and constraints for print */
+  body.printing-pdf .p-6,
+  body.printing-pdf section,
+  body.printing-pdf main {
+    padding: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+  
+  /* Card should take full width */
+  body.printing-pdf .border-\[color\:var\(--color-border\)\] {
+    max-width: none !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+  
+  /* Ensure text is black for better print quality */
+  * {
+    color: #000 !important;
+    background: transparent !important;
+  }
+}

@@ -69,18 +69,17 @@ const Assessment = () => {
       const response = await executeAssessmentWorkflow(data);
       console.log("Assessment API response:", response);
       
-      // Check if assessment is done and save analysis
-      const isDone = response?.done === "True" || response?.done === true || response?.done === "true";
-      if (isDone && response?.analysis && assessmentSessionId) {
-        console.log("Assessment completed! Saving analysis:", response.analysis);
-        await updateAssessmentAnalysis(assessmentSessionId, response.analysis);
-      }
+      // UI completion is controlled ONLY by question count (7 questions)
+      // Completely ignore API's done status
+      const questionCount = data.assessment.length;
       
-      // Extract question from response - handle nested follow_up_questions structure
+      // Extract question from response - always try to extract question if it exists
+      // Only skip if we've completed 7 questions
       let nextQuestion = "";
       
       // Handle nested structure: response.follow_up_questions.follow_up_questions
-      if (response?.follow_up_questions) {
+      // Always try to extract question unless we've completed 7 questions
+      if (response?.follow_up_questions && questionCount < 7) {
         // Check if it's nested: { follow_up_questions: { follow_up_questions: "..." } }
         if (response.follow_up_questions?.follow_up_questions) {
           const nested = response.follow_up_questions.follow_up_questions;
@@ -189,10 +188,45 @@ const Assessment = () => {
           ];
         });
       } else {
-        // Fallback to default prompt - use unique ID
+        // No question extracted - check our count first
+        // Only show "Thank you" if we've completed 7 questions (ignore API)
+        if (questionCount >= 7) {
+          // Assessment is complete - don't add a question, let handleSend handle completion
+          console.log("Assessment complete after 7 questions - no more questions needed");
+          return;
+        } else {
+          // We haven't reached 7 questions yet - use a generic question to continue
+          // Ignore API's done status, our count is what matters
+          const genericQuestion = "Please share more about your experience.";
+          setMessages((prev) => {
+            const questionExists = prev.some(m => m.sender === "guide" && m.text === genericQuestion);
+            if (questionExists) {
+              return prev;
+            }
+            return [
+              ...prev,
+              {
+                id: `prompt-${Date.now()}-${crypto.randomUUID()}`,
+                sender: "guide",
+                text: genericQuestion,
+                timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+              },
+            ];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching assessment question:", error);
+      // On error, only show fallback if we've completed 7 questions
+      const questionCount = data.assessment.length;
+      if (questionCount >= 7) {
+        // Assessment complete - don't add question
+        return;
+      } else {
+        // Use a generic question to continue
+        const genericQuestion = "Please share more about your experience.";
         setMessages((prev) => {
-          const fallbackText = prompts[data.assessment.length] || "Thank you for your response.";
-          const questionExists = prev.some(m => m.sender === "guide" && m.text === fallbackText);
+          const questionExists = prev.some(m => m.sender === "guide" && m.text === genericQuestion);
           if (questionExists) {
             return prev;
           }
@@ -201,31 +235,12 @@ const Assessment = () => {
             {
               id: `prompt-${Date.now()}-${crypto.randomUUID()}`,
               sender: "guide",
-              text: fallbackText,
+              text: genericQuestion,
               timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
             },
           ];
         });
       }
-    } catch (error) {
-      console.error("Error fetching assessment question:", error);
-      // Fallback to default prompts - use unique ID
-      setMessages((prev) => {
-        const fallbackText = prompts[data.assessment.length] || "Thank you for your response.";
-        const questionExists = prev.some(m => m.sender === "guide" && m.text === fallbackText);
-        if (questionExists) {
-          return prev;
-        }
-        return [
-          ...prev,
-          {
-            id: `prompt-${Date.now()}-${crypto.randomUUID()}`,
-            sender: "guide",
-            text: fallbackText,
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          },
-        ];
-      });
     } finally {
       setIsLoadingQuestion(false);
       isFetchingRef.current = false;
@@ -304,7 +319,7 @@ const Assessment = () => {
             
             // Initialize assessment data
             const initialData = {
-              status: qna.length >= 5 ? "done" as const : "ongoing" as const,
+              status: qna.length >= 7 ? "done" as const : "ongoing" as const,
               chat: chatString,
               assessment: qna
             };
@@ -312,7 +327,7 @@ const Assessment = () => {
             setAssessmentData(initialData);
             
             // If not complete, fetch next question
-            if (qna.length < 5) {
+            if (qna.length < 7) {
               setIsLoadingQuestion(true);
               fetchNextQuestion(initialData);
             } else {
@@ -368,11 +383,11 @@ const Assessment = () => {
               });
               setMessages(restoredMessages);
               setAssessmentData({
-                status: existingAssessment.qna.length >= 5 ? "done" as const : "ongoing" as const,
+                status: existingAssessment.qna.length >= 7 ? "done" as const : "ongoing" as const,
                 chat: existingAssessment.chat || chatString,
                 assessment: existingAssessment.qna
               });
-              if (existingAssessment.qna.length < 5) {
+              if (existingAssessment.qna.length < 7) {
                 setIsLoadingQuestion(true);
                 fetchNextQuestion({
                   status: "ongoing" as const,
@@ -448,7 +463,7 @@ const Assessment = () => {
               
               // Initialize assessment data with existing QNA
               const initialData = {
-                status: existingAssessment.qna.length >= 5 ? "done" as const : "ongoing" as const,
+                status: existingAssessment.qna.length >= 7 ? "done" as const : "ongoing" as const,
                 chat: existingAssessment.chat || chatString,
                 assessment: existingAssessment.qna
               };
@@ -456,7 +471,7 @@ const Assessment = () => {
               setAssessmentData(initialData);
               
               // If not complete, fetch next question
-              if (existingAssessment.qna.length < 5) {
+              if (existingAssessment.qna.length < 7) {
                 setIsLoadingQuestion(true);
                 fetchNextQuestion(initialData);
               } else {
@@ -506,11 +521,11 @@ const Assessment = () => {
         setMessages([
           {
             id: `prompt-${Date.now()}-${crypto.randomUUID()}`,
-            sender: "guide",
-            text: prompts[0],
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          },
-        ]);
+      sender: "guide",
+      text: prompts[0],
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    },
+  ]);
       }
     };
 
@@ -523,8 +538,8 @@ const Assessment = () => {
   }, []);
 
   const answeredCount = useMemo(() => messages.filter((message) => message.sender === "user").length, [messages]);
-  // Progress based on 5 questions for assessment
-  const totalQuestions = fromChatbot ? 5 : prompts.length;
+  // Progress based on 7 questions for assessment
+  const totalQuestions = fromChatbot ? 7 : prompts.length;
   const progress = Math.min((answeredCount / totalQuestions) * 100, 100);
   const estimatedRemaining = Math.max(0, 15 - answeredCount * 3);
 
@@ -549,15 +564,18 @@ const Assessment = () => {
     setInput("");
 
     // Update assessment data with new Q&A
-    const answerCount = answeredCount + 1;
+    // Count based on current assessment length + 1 (the answer we're about to add)
+    const currentAnswerCount = assessmentData.assessment.length;
+    const answerCount = currentAnswerCount + 1;
     const updatedAssessment = [
       ...assessmentData.assessment,
       { question: currentQuestion, answer: trimmed }
     ];
     
-    // Determine status: "ongoing" if less than 5 answers, "done" after 5th answer
-    const newStatus: "ongoing" | "done" = answerCount < 5 ? "ongoing" : "done";
-    const dbStatus: "in_progress" | "completed" = answerCount < 5 ? "in_progress" : "completed";
+    // Determine status: "ongoing" if less than 7 answers, "done" after 7th answer
+    // After 7th answer (answerCount === 7), we're done
+    const newStatus: "ongoing" | "done" = answerCount < 7 ? "ongoing" : "done";
+    const dbStatus: "in_progress" | "completed" = answerCount < 7 ? "in_progress" : "completed";
     
     // Update QNA in database and update session status/timestamp
     if (assessmentSessionId) {
@@ -578,11 +596,14 @@ const Assessment = () => {
     // Log the assessment data being sent
     console.log("=== SENDING ASSESSMENT DATA ===");
     console.log("Status:", newStatus);
-    console.log("Answer count:", answerCount);
+    console.log("Current answers in assessment:", currentAnswerCount);
+    console.log("Answer count after this answer:", answerCount);
+    console.log("Will be done?", answerCount >= 7);
     console.log("Assessment data:", JSON.stringify(updatedData, null, 2));
     console.log("===============================");
     
     // Send API request with updated data
+    // Only mark as done after the 7th answer (answerCount === 7)
     if (newStatus === "ongoing") {
       // Still ongoing, fetch next question
       setIsTyping(true);
@@ -591,18 +612,17 @@ const Assessment = () => {
       } catch (error) {
         console.error("Error fetching next question:", error);
       } finally {
-        setIsTyping(false);
+      setIsTyping(false);
       }
     } else {
-      // Done after 5th answer - send final request
+      // Done after 7th answer - send final request
       setIsTyping(true);
       try {
         const finalResult = await executeAssessmentWorkflow(updatedData);
         
-        // Check if done and save analysis
-        const isDone = finalResult?.done === "True" || finalResult?.done === true || finalResult?.done === "true";
-        if (isDone && finalResult?.analysis && assessmentSessionId) {
-          console.log("Assessment completed! Saving analysis:", finalResult.analysis);
+        // Always save analysis after 7 questions (ignore done status from API)
+        if (finalResult?.analysis && assessmentSessionId) {
+          console.log("Assessment completed after 7 questions! Saving analysis:", finalResult.analysis);
           await updateAssessmentAnalysis(assessmentSessionId, finalResult.analysis);
         }
         
@@ -615,25 +635,25 @@ const Assessment = () => {
           );
         }
         
-        setIsComplete(true);
-        addMessage({
-          id: "closing",
-          sender: "guide",
-          text: "Thank you. Ready to see the summary?",
-          timestamp,
-        });
+      setIsComplete(true);
+      addMessage({
+        id: "closing",
+        sender: "guide",
+        text: "Thank you. Ready to see the summary?",
+        timestamp,
+      });
       } catch (error) {
         console.error("Error sending final assessment:", error);
         
         // Session already marked as completed above, no need to update again
         
         setIsComplete(true);
-        addMessage({
+      addMessage({
           id: "closing",
-          sender: "guide",
+        sender: "guide",
           text: "Thank you. Ready to see the summary?",
           timestamp,
-        });
+      });
       } finally {
         setIsTyping(false);
       }
@@ -720,8 +740,8 @@ const Assessment = () => {
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-xs text-muted-foreground">Plain language is welcome. Bullet points work too.</p>
                   <Button type="submit" disabled={isTyping || isLoadingQuestion}>
-                    Send and continue
-                  </Button>
+                      Send and continue
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -734,7 +754,7 @@ const Assessment = () => {
                       </p>
                     </CardContent>
                   </Card>
-                  <Button onClick={() => navigate("/results", { state: { role } })}>
+                  <Button onClick={() => navigate("/results", { state: { role, sessionId: assessmentSessionId } })}>
                     View my calm results
                   </Button>
                 </div>

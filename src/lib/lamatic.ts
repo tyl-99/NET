@@ -6,6 +6,7 @@ const LAMATIC_API_URL = "https://tylsorganization131-yeongsproject667.lamatic.de
 const LAMATIC_PROJECT_ID = "6e530d51-9376-458d-b8cf-82157ca410a6";
 const LAMATIC_WORKFLOW_ID = "32cd511a-aebc-40c8-8ef9-5651a2d6be99"; // Chatbot Flow ID
 const LAMATIC_ASSESSMENT_WORKFLOW_ID = "ca9eb213-7334-4e35-af34-7c05efca7f0b"; // Assessment Flow ID
+const LAMATIC_PDF_WORKFLOW_ID = "8b6421e9-9ee3-4cbe-a350-51e2e1b6513a"; // PDF Generation Flow ID
 
 export interface Message {
   role: "system" | "user" | "assistant";
@@ -31,7 +32,7 @@ export interface LamaticResponse {
 /**
  * Execute Lamatic workflow with conversation messages
  */
-export async function executeLamaticWorkflow(messages: Message[], role?: string): Promise<string> {
+export async function executeLamaticWorkflow(messages: Message[], role?: string, userId?: string): Promise<string> {
   // Hardcoded API key for testing
   const apiKey = "lt-5db2bed98bbb35ff402e860f1179879b";
   
@@ -42,8 +43,7 @@ export async function executeLamaticWorkflow(messages: Message[], role?: string)
     throw new Error("LAMATIC_API_KEY is not set");
   }
 
-  // Construct the query - try passing input as a variable
-  // The API might accept input as a JSON object variable
+  // Construct the query - wrap in "input" object
   const query = `query ExecuteWorkflow($workflowId: String!, $input: JSON) {
     executeWorkflow(
       workflowId: $workflowId
@@ -60,7 +60,7 @@ export async function executeLamaticWorkflow(messages: Message[], role?: string)
     messages: messages
   };
   
-  // Add role as separate key-value if provided
+  // Add role if provided
   if (role) {
     input.role = role;
   }
@@ -234,3 +234,144 @@ export async function executeAssessmentWorkflow(assessmentData: {
   }
 }
 
+/**
+ * Execute Lamatic PDF workflow with session_id
+ * Returns HTML content for PDF
+ */
+export async function executePDFWorkflow(sessionId: string): Promise<string> {
+  // Hardcoded API key for testing
+  const apiKey = "lt-5db2bed98bbb35ff402e860f1179879b";
+  
+  if (!apiKey) {
+    throw new Error("LAMATIC_API_KEY is not set");
+  }
+
+  const query = `query ExecuteWorkflow($workflowId: String!, $session_id: String!) {
+    executeWorkflow(
+      workflowId: $workflowId
+      payload: {
+        session_id: $session_id
+      }
+    ) {
+      status
+      result
+    }
+  }`;
+
+  const variables = {
+    workflowId: LAMATIC_PDF_WORKFLOW_ID,
+    session_id: sessionId
+  };
+  
+  console.log("Lamatic PDF API request:", JSON.stringify({ query, variables }, null, 2));
+
+  try {
+    const response = await fetch(LAMATIC_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "x-project-id": LAMATIC_PROJECT_ID,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Lamatic PDF API error response:", errorText);
+      throw new Error(`HTTP error! status: ${response.status}. Response: ${errorText}`);
+    }
+
+    const data: LamaticResponse = await response.json();
+    console.log("Lamatic PDF API response:", JSON.stringify(data, null, 2));
+
+    if (data.errors && data.errors.length > 0) {
+      throw new Error(data.errors[0].message);
+    }
+
+    const result = data.data?.executeWorkflow?.result;
+    
+    if (!result) {
+      console.error("No result in API response. Full response:", JSON.stringify(data, null, 2));
+      throw new Error("No result from Lamatic PDF API");
+    }
+
+    // Parse the result - should be HTML string
+    // The API might return it as a string directly, or nested in various structures
+    let htmlContent: string;
+    
+    // Check if result is already a string (HTML)
+    if (typeof result === "string") {
+      htmlContent = result;
+    } 
+    // Check if result has html property
+    else if (result?.html) {
+      htmlContent = typeof result.html === "string" ? result.html : JSON.stringify(result.html);
+    } 
+    // Check if result has output property (might be nested)
+    else if (result?.output) {
+      if (typeof result.output === "string") {
+        htmlContent = result.output;
+      } else if (result.output?.html) {
+        htmlContent = result.output.html;
+      } else {
+        htmlContent = JSON.stringify(result.output);
+      }
+    }
+    // Check if result has a pdf_html or html_content property
+    else if (result?.pdf_html) {
+      htmlContent = typeof result.pdf_html === "string" ? result.pdf_html : JSON.stringify(result.pdf_html);
+    } else if (result?.html_content) {
+      htmlContent = typeof result.html_content === "string" ? result.html_content : JSON.stringify(result.html_content);
+    }
+    // If result is an object, try to stringify it (might contain HTML)
+    else {
+      console.warn("Unexpected result structure:", JSON.stringify(result, null, 2));
+      // Try to extract any string value that might be HTML
+      const resultStr = JSON.stringify(result);
+      // Check if it looks like HTML
+      if (resultStr.includes("<html") || resultStr.includes("<!DOCTYPE")) {
+        htmlContent = resultStr;
+      } else {
+        htmlContent = resultStr;
+      }
+    }
+
+    // Remove markdown code block markers (```html ... ```)
+    htmlContent = htmlContent.replace(/^```html\s*/i, "").replace(/\s*```$/g, "");
+    htmlContent = htmlContent.replace(/^```\s*/i, "").replace(/\s*```$/g, "");
+    
+    // Trim any leading/trailing whitespace
+    htmlContent = htmlContent.trim();
+
+    // Extract body content and remove style tags
+    let finalHtml = htmlContent;
+    
+    const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    
+    if (bodyMatch) {
+      // Extract body content
+      finalHtml = bodyMatch[1].trim();
+      
+      // Remove any <style> tags from body content (they shouldn't be there but sometimes are)
+      finalHtml = finalHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+      
+      // Remove page-break divs
+      finalHtml = finalHtml.replace(/<div[^>]*class=["\']page-break["\'][^>]*>[\s\S]*?<\/div>/gi, '');
+      
+      console.log("Extracted body content and removed style tags");
+    } else {
+      console.warn("Could not find <body> tags, using full HTML");
+      // Still try to remove style tags even if no body found
+      finalHtml = finalHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    }
+
+    console.log("Final HTML content length:", finalHtml.length);
+    console.log("HTML preview (first 200 chars):", finalHtml.substring(0, 200));
+
+    return finalHtml;
+  } catch (error) {
+    console.error("Lamatic PDF API error:", error);
+    throw error;
+  }
+}
