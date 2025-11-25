@@ -44,14 +44,13 @@ const Navbar = () => {
       <nav className="sticky top-0 z-50 border-b border-[color:var(--color-border)]/80 bg-[color:var(--color-bg)]/90 backdrop-blur supports-[backdrop-filter]:bg-[color:var(--color-bg)]/75">
         <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 md:px-8">
           <Link to="/" className="flex items-center gap-3 focus-ring">
-            <img 
-              src={logo} 
-              alt="N.E.T. Logo" 
-              className="h-11 w-11 object-contain"
+            <img
+              src={logo}
+              alt="N.E.T. Logo"
+              className="h-12 w-12 object-contain"
             />
             <div className="flex flex-col">
               <span className="text-lg font-semibold text-[color:var(--color-ink)]">N.E.T.</span>
-              <span className="text-xs font-medium uppercase tracking-[0.28em] text-muted-foreground">NeuroEducationalTesting</span>
             </div>
           </Link>
 
