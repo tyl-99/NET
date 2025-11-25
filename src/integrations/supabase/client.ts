@@ -5,7 +5,7 @@ import type { Database } from './types';
 // Get API key from environment variable or use hardcoded fallback
 // To get your API key: Go to Supabase Dashboard > Settings > API > anon/public key
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xstummjwfcmoljnagmsx.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhzdHVtbWp3ZmNtb2xqbmFnbXN4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4OTk2OTksImV4cCI6MjA3ODQ3NTY5OX0.FboGdQMflJnsdW2KSboSFCvrR2LgOy7daTj5Y524baU";
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_iiuSalo3LI_PtgrLgFx98A_Cqti4Vo1";
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
@@ -72,12 +72,16 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promi
   
   // CRITICAL: Verify apikey is actually in headers
   const apikeyValue = headers.get('apikey');
-  console.log('[Supabase Fetch] VERIFICATION - apikey header value:', {
+  console.log('[Supabase Fetch] VERIFICATION - apikey header value:', JSON.stringify({
     exists: !!apikeyValue,
     length: apikeyValue?.length,
     matchesExpected: apikeyValue === SUPABASE_PUBLISHABLE_KEY,
-    preview: apikeyValue?.substring(0, 30) + '...',
-  });
+    preview: apikeyValue?.substring(0, 50) + '...',
+    end: '...' + apikeyValue?.substring((apikeyValue?.length || 0) - 20),
+    expectedPreview: SUPABASE_PUBLISHABLE_KEY.substring(0, 50) + '...',
+    expectedEnd: '...' + SUPABASE_PUBLISHABLE_KEY.substring(SUPABASE_PUBLISHABLE_KEY.length - 20),
+    fullMatch: apikeyValue === SUPABASE_PUBLISHABLE_KEY,
+  }, null, 2));
   
   // Also log the actual headers object structure
   console.log('[Supabase Fetch] Headers object type:', headers.constructor.name);
