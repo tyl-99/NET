@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,7 +36,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const refresh = refreshToken || queryRefreshToken;
       
       if (token && refresh) {
+        setIsProcessingOAuth(true);
+        setLoading(true);
         try {
+          console.log('Processing OAuth callback...');
           // Set the session first
           const { data: { session }, error } = await supabase.auth.setSession({
             access_token: token,
@@ -44,28 +48,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           if (error) {
             console.error('Error setting session:', error);
+            setIsProcessingOAuth(false);
+            setLoading(false);
+            // Redirect to login on error
+            navigate("/login", { replace: true });
             return;
           }
           
           if (session) {
+            console.log('OAuth session set successfully');
             setSession(session);
             setUser(session.user);
+            setIsProcessingOAuth(false);
             setLoading(false);
             
-            // Force redirect to onboarding regardless of current URL
-            // Clear any hash/query params and redirect
-            window.history.replaceState(null, '', window.location.origin);
+            // Clear hash/query params and redirect to onboarding
+            window.history.replaceState(null, '', '/onboarding');
             navigate("/onboarding", { replace: true });
             return;
           }
         } catch (error) {
           console.error('Error handling OAuth callback:', error);
+          setIsProcessingOAuth(false);
+          setLoading(false);
+          navigate("/login", { replace: true });
         }
+        return; // Exit early if we processed OAuth
       }
       
       // If we're on a remote URL (like Amplify) but have a session, redirect to onboarding
       if (window.location.hostname.includes('amplifyapp.com') || 
-          window.location.hostname.includes('amazonaws.com')) {
+          window.location.hostname.includes('amazonaws.com') ||
+          window.location.hostname.includes('railway.app')) {
         supabase.auth.getSession().then(({ data: { session } }) => {
           if (session) {
             // Redirect to onboarding using current domain
