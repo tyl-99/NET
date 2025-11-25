@@ -14,6 +14,28 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Create a custom fetch that ensures apikey header is always included
+const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promise<Response> => {
+  const headers = new Headers(options?.headers);
+  
+  // Ensure apikey header is always present
+  if (!headers.has('apikey')) {
+    headers.set('apikey', SUPABASE_PUBLISHABLE_KEY);
+  }
+  
+  // Ensure Content-Type is set for POST/PUT/PATCH requests
+  if (options?.method && ['POST', 'PUT', 'PATCH'].includes(options.method.toUpperCase())) {
+    if (!headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json');
+    }
+  }
+  
+  return fetch(url, {
+    ...options,
+    headers,
+  });
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
@@ -24,9 +46,6 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     schema: 'public',
   },
   global: {
-    headers: {
-      'apikey': SUPABASE_PUBLISHABLE_KEY,
-      'Content-Type': 'application/json',
-    },
+    fetch: customFetch,
   },
 });

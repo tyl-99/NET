@@ -328,6 +328,12 @@ export async function getActiveAssessmentSession(userId: string | null): Promise
   if (!userId) return null;
   
   try {
+    // Ensure we have a valid session for authenticated requests
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.warn("No active session found for authenticated request");
+    }
+    
     const { data, error } = await supabase
       .from("assessment_sessions")
       .select("*")
@@ -338,6 +344,7 @@ export async function getActiveAssessmentSession(userId: string | null): Promise
       .single();
 
     if (error) {
+      console.error("Error fetching active assessment session:", error);
       // No active session found
       return null;
     }
