@@ -42,7 +42,7 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promi
   headers.forEach((value, key) => {
     existingHeaders[key] = key === 'apikey' ? value.substring(0, 20) + '...' : value;
   });
-  console.log('[Supabase Fetch] Existing headers:', existingHeaders);
+  console.log('[Supabase Fetch] Existing headers:', JSON.stringify(existingHeaders, null, 2));
   
   // ALWAYS set apikey header for Supabase requests
   const hadApikey = headers.has('apikey');
@@ -68,7 +68,7 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promi
       ? value.substring(0, 20) + '...' 
       : value;
   });
-  console.log('[Supabase Fetch] Final headers being sent:', finalHeaders);
+  console.log('[Supabase Fetch] Final headers being sent:', JSON.stringify(finalHeaders, null, 2));
   
   // CRITICAL: Verify apikey is actually in headers
   const apikeyValue = headers.get('apikey');
@@ -92,23 +92,44 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promi
     headersObj[key] = value;
   });
   
-  console.log('[Supabase Fetch] Converting headers to plain object:', {
+  // Log the converted headers object with full details
+  const headersObjForLog: Record<string, string> = {};
+  Object.keys(headersObj).forEach(key => {
+    headersObjForLog[key] = key === 'apikey' || key === 'authorization' 
+      ? headersObj[key].substring(0, 30) + '...' 
+      : headersObj[key];
+  });
+  
+  console.log('[Supabase Fetch] Converting headers to plain object:', JSON.stringify({
     keys: Object.keys(headersObj),
     hasApikey: 'apikey' in headersObj,
-    apikeyPreview: headersObj['apikey']?.substring(0, 30) + '...',
+    apikeyValue: headersObj['apikey'] ? headersObj['apikey'].substring(0, 50) + '...' : 'MISSING',
+    apikeyLength: headersObj['apikey']?.length || 0,
     allKeys: Object.keys(headersObj).join(', '),
-  });
+    headersPreview: headersObjForLog,
+  }, null, 2));
   
   const fetchOptions: RequestInit = {
     ...options,
     headers: headersObj, // Use plain object instead of Headers instance
   };
   
-  console.log('[Supabase Fetch] Final fetch options:', {
-    method: fetchOptions.method,
-    headersKeys: Object.keys(fetchOptions.headers as Record<string, string> || {}),
-    url: urlString,
+  const finalHeadersForLog = fetchOptions.headers as Record<string, string> || {};
+  const finalHeadersPreview: Record<string, string> = {};
+  Object.keys(finalHeadersForLog).forEach(key => {
+    finalHeadersPreview[key] = key === 'apikey' || key === 'authorization' 
+      ? finalHeadersForLog[key].substring(0, 30) + '...' 
+      : finalHeadersForLog[key];
   });
+  
+  console.log('[Supabase Fetch] Final fetch options:', JSON.stringify({
+    method: fetchOptions.method,
+    headersKeys: Object.keys(finalHeadersForLog),
+    hasApikey: 'apikey' in finalHeadersForLog,
+    apikeyValue: finalHeadersForLog['apikey'] ? finalHeadersForLog['apikey'].substring(0, 50) + '...' : 'MISSING',
+    headersPreview: finalHeadersPreview,
+    url: urlString,
+  }, null, 2));
   
   const response = await fetch(url, fetchOptions);
   
@@ -122,12 +143,14 @@ const customFetch = async (url: RequestInfo | URL, options?: RequestInit): Promi
   return response;
 };
 
-console.log('[Supabase Client] Initializing Supabase client:', {
+console.log('[Supabase Client] Initializing Supabase client:', JSON.stringify({
   url: SUPABASE_URL,
   hasApiKey: !!SUPABASE_PUBLISHABLE_KEY,
-  apiKeyPreview: SUPABASE_PUBLISHABLE_KEY.substring(0, 20) + '...',
+  apiKeyLength: SUPABASE_PUBLISHABLE_KEY.length,
+  apiKeyPreview: SUPABASE_PUBLISHABLE_KEY.substring(0, 50) + '...',
+  apiKeyEnd: '...' + SUPABASE_PUBLISHABLE_KEY.substring(SUPABASE_PUBLISHABLE_KEY.length - 20),
   usingCustomFetch: true,
-});
+}, null, 2));
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
