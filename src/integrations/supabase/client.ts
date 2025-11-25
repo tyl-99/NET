@@ -7,6 +7,15 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://xstummjwfcmoljnagmsx.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "sb_publishable_iiuSalo3LI_PtgrLgFx98A_Cqti4Vo1";
 
+// Debug: Log which API key is being used
+console.log('[Supabase Config] Environment check:', {
+  hasEnvVar: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+  envVarValue: import.meta.env.VITE_SUPABASE_ANON_KEY ? import.meta.env.VITE_SUPABASE_ANON_KEY.substring(0, 30) + '...' : 'NOT SET',
+  usingFallback: !import.meta.env.VITE_SUPABASE_ANON_KEY,
+  finalKeyPreview: SUPABASE_PUBLISHABLE_KEY.substring(0, 30) + '...',
+  finalKeyLength: SUPABASE_PUBLISHABLE_KEY.length,
+});
+
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
 }
