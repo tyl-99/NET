@@ -359,7 +359,7 @@ export async function getActiveAssessmentSession(userId: string | null): Promise
       .eq("status", "in_progress")
       .order("created_at", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle(); // Use maybeSingle() instead of single() - returns null if no rows instead of error
 
     console.log('[getActiveAssessmentSession] Query result:', {
       hasData: !!data,
@@ -377,6 +377,12 @@ export async function getActiveAssessmentSession(userId: string | null): Promise
       console.error("[getActiveAssessmentSession] Error fetching active assessment session:", error);
       console.error("[getActiveAssessmentSession] Error details:", JSON.stringify(error, null, 2));
       // No active session found
+      return null;
+    }
+
+    // maybeSingle() returns null if no rows found, which is fine
+    if (!data) {
+      console.log('[getActiveAssessmentSession] No active assessment session found');
       return null;
     }
 
