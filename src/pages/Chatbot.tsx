@@ -49,6 +49,12 @@ const Chatbot = () => {
 
   // Initialize chat with greeting on mount
   useEffect(() => {
+    console.log('[Chatbot] useEffect triggered, initializing chat...', {
+      userRole,
+      userId: user?.id,
+      currentPath: window.location.pathname,
+    });
+    
     const initializeChat = async () => {
       setIsInitializing(true);
       try {
@@ -56,7 +62,9 @@ const Chatbot = () => {
         const initialMessages: Message[] = [
           { role: "system", content: "You are a helpful assistant." },
         ];
+        console.log('[Chatbot] Calling executeLamaticWorkflow...');
         const response = await executeLamaticWorkflow(initialMessages, userRole, user?.id);
+        console.log('[Chatbot] Received response from Lamatic:', response?.substring(0, 100) + '...');
         
         const assistantMessage: Message = { 
           role: "assistant", 
@@ -65,8 +73,9 @@ const Chatbot = () => {
         
         const newMessages = [...initialMessages, assistantMessage];
         setMessages(newMessages);
+        console.log('[Chatbot] Chat initialized successfully');
       } catch (error) {
-        console.error("Error initializing chat:", error);
+        console.error("[Chatbot] Error initializing chat:", error);
         toast({
           title: "Error",
           description: error instanceof Error ? error.message : "Failed to initialize chat. Please refresh the page.",

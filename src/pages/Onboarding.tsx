@@ -120,8 +120,16 @@ const Onboarding = () => {
     };
     const roleText = roleTextMap[selectedRole] || selectedRole;
     
+    console.log('[Onboarding] Navigating to /chatbot with:', {
+      role: roleText,
+      retainData,
+      currentPath: window.location.pathname,
+    });
+    
     toast.success("We will keep it calm and clear.");
     navigate("/chatbot", { state: { role: roleText, retainData } });
+    
+    console.log('[Onboarding] Navigation called, should be on /chatbot now');
   };
 
   const handleContinueActiveAssessment = async () => {

@@ -148,16 +148,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
         
         // Always redirect to onboarding after successful login (any method)
+        // BUT only if user is on root or login page - don't redirect if already on other pages
         if (event === 'SIGNED_IN' && session) {
-          console.log('[AuthContext] User signed in, checking redirect...');
+          console.log('[AuthContext] SIGNED_IN event detected, checking redirect...');
           const currentPath = window.location.pathname;
           console.log('[AuthContext] Current path:', currentPath);
+          // Only redirect if on root or login page - don't interfere with other navigations
           if (currentPath === '/' || currentPath === '/login') {
-            console.log('[AuthContext] Redirecting to /onboarding...');
+            console.log('[AuthContext] Redirecting to /onboarding from', currentPath);
             // Small delay to ensure URL is cleaned up
             setTimeout(() => {
               navigate("/onboarding", { replace: true });
             }, 100);
+          } else {
+            console.log('[AuthContext] User already on', currentPath, '- NOT redirecting to avoid interfering with navigation');
           }
         }
       }
