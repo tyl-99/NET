@@ -18,9 +18,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isProcessingOAuth, setIsProcessingOAuth] = useState(false);
   const navigate = useNavigate();
+  const hasInitialized = useRef(false);
 
   useEffect(() => {
-    console.log('[AuthContext] useEffect triggered');
+    // Prevent multiple initializations
+    if (hasInitialized.current) {
+      console.log('[AuthContext] useEffect already initialized, skipping...');
+      return;
+    }
+    
+    console.log('[AuthContext] useEffect triggered - first time initialization');
+    hasInitialized.current = true;
     
     // Handle OAuth callback - check for hash fragments or query params
     const handleAuthCallback = async () => {
@@ -117,14 +125,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         console.log('[AuthContext] No OAuth tokens found in URL');
       }
       
-      // If we're on a remote URL (like Amplify) but have a session, redirect to onboarding
-      if (window.location.hostname.includes('amplifyapp.com') || 
+      // If we're on a remote URL (like Amplify/Railway) but have a session, 
+      // ONLY redirect to onboarding if we're on root or login page
+      // Don't redirect if user is already on other pages (like /chatbot)
+      const currentPath = window.location.pathname;
+      if ((window.location.hostname.includes('amplifyapp.com') || 
           window.location.hostname.includes('amazonaws.com') ||
-          window.location.hostname.includes('railway.app')) {
+          window.location.hostname.includes('railway.app')) &&
+          (currentPath === '/' || currentPath === '/login')) {
+        console.log('[AuthContext] Checking session for redirect on remote hostname...');
         supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session) {
+          if (session && (currentPath === '/' || currentPath === '/login')) {
+            console.log('[AuthContext] Redirecting to /onboarding from remote hostname');
             // Redirect to onboarding using current domain
             navigate("/onboarding", { replace: true });
+          } else {
+            console.log('[AuthContext] Not redirecting - user already on', currentPath);
           }
         });
       }
